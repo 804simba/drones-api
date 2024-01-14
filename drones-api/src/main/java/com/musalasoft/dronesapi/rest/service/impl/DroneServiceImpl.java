@@ -3,6 +3,7 @@ package com.musalasoft.dronesapi.rest.service.impl;
 import com.musalasoft.dronesapi.core.exception.DroneNotFoundException;
 import com.musalasoft.dronesapi.core.exception.DroneRegistrationException;
 import com.musalasoft.dronesapi.core.utils.Constants;
+import com.musalasoft.dronesapi.core.utils.payload.PaginationPayloadUtility;
 import com.musalasoft.dronesapi.core.utils.payload.ResponsePayloadUtility;
 import com.musalasoft.dronesapi.core.utils.payload.DroneValidatorUtility;
 import com.musalasoft.dronesapi.model.entity.Drone;
@@ -15,7 +16,9 @@ import com.musalasoft.dronesapi.model.payload.request.RegisterDroneRequest;
 import com.musalasoft.dronesapi.model.payload.response.BaseResponse;
 import com.musalasoft.dronesapi.model.payload.response.BatteryLevelResponse;
 import com.musalasoft.dronesapi.model.payload.response.FetchLoadedMedicationsResponse;
+import com.musalasoft.dronesapi.model.payload.response.PagedResponse;
 import com.musalasoft.dronesapi.model.repository.DroneRepository;
+import com.musalasoft.dronesapi.model.repository.MedicationRepository;
 import com.musalasoft.dronesapi.rest.builders.DronePayloadBuilder;
 import com.musalasoft.dronesapi.rest.builders.MedicationPayloadBuilder;
 import com.musalasoft.dronesapi.rest.service.BatteryLevelAuditService;
@@ -37,12 +40,14 @@ import java.util.List;
 public class DroneServiceImpl implements DroneService {
     private final DroneRepository droneRepository;
 
+    private final MedicationRepository medicationRepository;
     private final BatteryLevelAuditService batteryLevelAuditService;
 
     @Autowired
-    public DroneServiceImpl(DroneRepository droneRepository, BatteryLevelAuditService batteryLevelAuditService) {
+    public DroneServiceImpl(DroneRepository droneRepository, BatteryLevelAuditService batteryLevelAuditService, MedicationRepository medicationRepository) {
         this.droneRepository = droneRepository;
         this.batteryLevelAuditService = batteryLevelAuditService;
+        this.medicationRepository = medicationRepository;
     }
 
     @Override
@@ -77,9 +82,10 @@ public class DroneServiceImpl implements DroneService {
         }
         Drone drone = droneRepository.findById(droneId).get();
         Medication medication = MedicationPayloadBuilder.buildMedicationEntity(loadDroneRequest);
+        medication.setDrone(drone);
+        medicationRepository.save(medication);
         DroneValidatorUtility.validateDroneWeightLimit(drone, medication.getWeight());
         DroneValidatorUtility.validateDroneBatteryLevel(drone);
-        drone.getMedications().add(medication);
         Drone savedDrone = droneRepository.save(drone);
         DroneDto droneDto = DronePayloadBuilder.convertToDroneDto(savedDrone);
         return ResponsePayloadUtility.createSuccessResponse(droneDto, "drone loaded successfully");
@@ -88,7 +94,7 @@ public class DroneServiceImpl implements DroneService {
     @Override
     @Transactional(readOnly = true)
     public BaseResponse<?> getLoadedMedication(Long droneId) {
-        Drone foundDrone = droneRepository.findById(droneId)
+        Drone foundDrone = droneRepository.findMedicationsByDroneId(droneId)
                 .orElseThrow(() -> new DroneNotFoundException("drone not found"));
         FetchLoadedMedicationsResponse fetchLoadedMedicationsResponse = new FetchLoadedMedicationsResponse();
         fetchLoadedMedicationsResponse.setDroneId(foundDrone.getId());
@@ -111,7 +117,8 @@ public class DroneServiceImpl implements DroneService {
             throw new DroneNotFoundException("no available drones were found");
         }
         Page<DroneDto> pagedAvailableDrones = availableDrones.map(DronePayloadBuilder::convertToDroneDto);
-        return ResponsePayloadUtility.createSuccessResponse(pagedAvailableDrones,"fetched available drones successfully");
+        PagedResponse<DroneDto> pagedResponse = PaginationPayloadUtility.resolvePaginationMetaData(pagedAvailableDrones, pageNumber, pageSize, "success", Constants.ResponseStatusCode.SUCCESS, "fetched available drones");
+        return ResponsePayloadUtility.createSuccessResponse(pagedResponse,"fetched available drones successfully");
     }
 
     @Override

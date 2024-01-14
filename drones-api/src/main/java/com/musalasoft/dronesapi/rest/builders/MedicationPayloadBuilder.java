@@ -6,14 +6,16 @@ import com.musalasoft.dronesapi.model.payload.request.LoadDroneRequest;
 
 public class MedicationPayloadBuilder {
     public static Medication buildMedicationEntity(LoadDroneRequest loadDroneRequest) {
-        return Medication.builder().code(loadDroneRequest.getMedicationCode()).image(loadDroneRequest.getMedicationImage())
-                .weight(loadDroneRequest.getMedicationWeight()).name(loadDroneRequest.getMedicationName()).build();
+        return Medication.builder().code(loadDroneRequest.getMedicationCode())
+                .image(loadDroneRequest.getMedicationImage())
+                .weight(loadDroneRequest.getMedicationWeight() != null ? loadDroneRequest.getMedicationWeight() : 0.0)
+                .name(loadDroneRequest.getMedicationName()).build();
     }
 
     public static MedicationDto convertToMedicationDto(Medication medication) {
         MedicationDto medicationDto = new MedicationDto();
         medicationDto.setId(medication.getId());
-        medicationDto.setWeight(medication.getWeight());
+        medicationDto.setWeight((medication.getWeight() != null) ? medication.getWeight() : 0.0);
         medicationDto.setName(medication.getName());
         medicationDto.setImage(medication.getImage());
         medicationDto.setCode(medication.getCode());

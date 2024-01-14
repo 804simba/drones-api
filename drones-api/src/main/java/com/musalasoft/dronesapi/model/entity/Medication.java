@@ -20,7 +20,7 @@ public class Medication {
     private String name;
 
     @Column(name = "medication_weight")
-    private double weight;
+    private Double weight;
 
     @Column(name = "medication_code")
     private String code;

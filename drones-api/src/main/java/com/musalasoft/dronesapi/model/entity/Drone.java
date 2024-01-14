@@ -40,6 +40,6 @@ public class Drone {
     @Column(name = "drone_state")
     private DroneState droneState;
 
-    @OneToMany(mappedBy = "drone", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "drone", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private Set<Medication> medications;
 }

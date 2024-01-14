@@ -12,7 +12,7 @@ public class MedicationDto {
     private String name;
 
     @JsonProperty("medication_weight")
-    private double weight;
+    private Double weight;
 
     @JsonProperty("medication_code")
     private String code;
