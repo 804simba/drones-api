@@ -17,7 +17,6 @@ public class MedicationPayloadBuilder {
         medicationDto.setName(medication.getName());
         medicationDto.setImage(medication.getImage());
         medicationDto.setCode(medication.getCode());
-
         return medicationDto;
     }
 }

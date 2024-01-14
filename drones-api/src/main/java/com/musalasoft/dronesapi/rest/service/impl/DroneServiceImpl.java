@@ -62,10 +62,8 @@ public class DroneServiceImpl implements DroneService {
         drone.setWeightLimit(registerDroneRequest.getWeightLimit());
         drone.setDroneState(DroneState.IDLE);
         drone.setModel(registerDroneRequest.getModel());
-
         Drone savedDrone = droneRepository.save(drone);
         DroneDto droneDto = DronePayloadBuilder.convertToDroneDto(savedDrone);
-
         return ResponsePayloadUtility.createSuccessResponse(droneDto, "drone registered successfully");
     }
 

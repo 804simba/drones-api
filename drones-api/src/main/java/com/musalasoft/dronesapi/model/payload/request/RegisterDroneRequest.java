@@ -15,7 +15,7 @@ import java.io.Serializable;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RegisterDroneRequest implements Serializable {
     @NotEmpty(message = "serial number must not be null")
-    @Size(max = 100, message = "Serial number must be at most 100 characters")
+    @Size(min = 5, max = 100, message = "Serial number must be at most 100 characters")
     @JsonProperty("serial_number")
     private String serialNumber;
 

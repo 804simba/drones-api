@@ -16,13 +16,13 @@ public class DronePayloadBuilder {
         droneDto.setWeightLimit(drone.getWeightLimit());
         droneDto.setModel(drone.getModel());
         droneDto.setState(drone.getDroneState().name());
-
-        Set<MedicationDto> medications = drone.getMedications().stream()
-                .map(MedicationPayloadBuilder::convertToMedicationDto)
-                .collect(Collectors.toSet());
-
+        Set<MedicationDto> medications = null;
+        if (drone.getMedications() != null) {
+            medications = drone.getMedications().stream()
+                    .map(MedicationPayloadBuilder::convertToMedicationDto)
+                    .collect(Collectors.toSet());
+        }
         droneDto.setMedications(medications);
-
         return droneDto;
     }
 }

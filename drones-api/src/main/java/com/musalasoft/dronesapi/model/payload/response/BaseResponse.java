@@ -34,24 +34,14 @@ public class BaseResponse<T> implements Serializable {
     @JsonProperty("response_time")
     @JsonSerialize(using = PayloadLocalDateTimeSerializer.class)
     @JsonDeserialize(using = PayloadLocalDateTimeDeserializer.class)
-    private String responseTime;
+    private LocalDateTime responseTime;
 
     @JsonProperty("data")
     private T data;
 
-    public BaseResponse(int responseCode, String responseMessage, String responseTime) {
+    public BaseResponse(int responseCode, String responseMessage, LocalDateTime responseTime) {
         this.responseCode = responseCode;
         this.responseMessage = responseMessage;
         this.responseTime = responseTime;
-    }
-
-
-    public static <T> BaseResponse<Page<T>> createPageResponse(int responseCode, String responseMessage, Page<T> data) {
-        BaseResponse<Page<T>> response = new BaseResponse<>();
-        response.setResponseCode(responseCode);
-        response.setResponseMessage(responseMessage);
-        response.setResponseTime(LocalDateTime.now().toString());
-        response.setData(data);
-        return response;
     }
 }

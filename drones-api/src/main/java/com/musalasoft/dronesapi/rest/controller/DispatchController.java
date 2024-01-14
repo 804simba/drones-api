@@ -4,6 +4,7 @@ import com.musalasoft.dronesapi.model.payload.request.LoadDroneRequest;
 import com.musalasoft.dronesapi.model.payload.request.RegisterDroneRequest;
 import com.musalasoft.dronesapi.model.payload.response.BaseResponse;
 import com.musalasoft.dronesapi.rest.service.DroneService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -13,16 +14,21 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/drones")
 public class DispatchController {
-    @Autowired
+
     private DroneService droneService;
 
+    @Autowired
+    public DispatchController(DroneService droneService) {
+        this.droneService = droneService;
+    }
+
     @PostMapping(value = "/register", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public BaseResponse<?> registerDrone(@RequestBody RegisterDroneRequest registerDroneRequest) {
+    public BaseResponse<?> registerDrone(@RequestBody @Valid RegisterDroneRequest registerDroneRequest) {
         return droneService.registerDrone(registerDroneRequest);
     }
 
     @PostMapping(value = "/{droneId}/load", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public BaseResponse<?> loadDrone(@PathVariable Long droneId, @RequestBody LoadDroneRequest loadDroneRequest) {
+    public BaseResponse<?> loadDrone(@PathVariable Long droneId, @RequestBody @Valid LoadDroneRequest loadDroneRequest) {
         return droneService.loadDrone(droneId, loadDroneRequest);
     }
 
