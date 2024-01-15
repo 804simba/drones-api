@@ -1,7 +1,9 @@
 package com.musalasoft.dronesapi.rest.service.impl;
 
 import com.musalasoft.dronesapi.core.exception.DroneAlreadyExistsException;
+import com.musalasoft.dronesapi.core.exception.DroneNotFoundException;
 import com.musalasoft.dronesapi.core.exception.DroneOverLoadException;
+import com.musalasoft.dronesapi.core.utils.Constants;
 import com.musalasoft.dronesapi.core.utils.payload.DroneModelMapper;
 import com.musalasoft.dronesapi.model.entity.Drone;
 import com.musalasoft.dronesapi.model.entity.Medication;
@@ -11,6 +13,7 @@ import com.musalasoft.dronesapi.model.payload.dto.DroneDto;
 import com.musalasoft.dronesapi.model.payload.request.LoadDroneRequest;
 import com.musalasoft.dronesapi.model.payload.request.RegisterDroneRequest;
 import com.musalasoft.dronesapi.model.payload.response.BaseResponse;
+import com.musalasoft.dronesapi.model.payload.response.FetchLoadedMedicationsResponse;
 import com.musalasoft.dronesapi.model.repository.DroneRepository;
 import com.musalasoft.dronesapi.model.repository.MedicationRepository;
 import com.musalasoft.dronesapi.rest.service.BatteryLevelAuditService;
@@ -26,6 +29,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -202,6 +206,56 @@ class DroneServiceImplTest {
     }
 
     @Test
+    void shouldTestLoadDroneValidationOfInvalidMedicationNameCharacterFails() {
+        String invalidName = "strepsils!!*#$";
+        LoadDroneRequest request = LoadDroneRequest.builder()
+                .droneSerialNumber("lorem")
+                .medicationImage("image")
+                .medicationWeight(30.0)
+                .medicationCode("MED_2022")
+                .medicationName(invalidName)
+                .build();
+
+        Set<ConstraintViolation<LoadDroneRequest>> violations = validator.validate(request);
+
+        assertTrue(violations.size() > 0, "Validation should produce violations");
+        assertEquals("medication name must only contain letters, numbers, '-', or '_'", violations.iterator().next().getMessage());
+    }
+
+    @Test
+    void shouldTestLoadDroneValidationOfValidMedicationNamePasses() {
+        String validName = "Aspirin";
+        LoadDroneRequest request = LoadDroneRequest.builder()
+                .droneSerialNumber("lorem")
+                .medicationImage("image")
+                .medicationWeight(30.0)
+                .medicationCode("MED_2022")
+                .medicationName(validName)
+                .build();
+
+        Set<ConstraintViolation<LoadDroneRequest>> violations = validator.validate(request);
+
+        assertEquals(0, violations.size(), "Validation should not produce violations");
+    }
+
+    @Test
+    void shouldTestLoadDroneValidationOfInvalidMedicationCodeCharacterFails() {
+        String invalidCode = "strepsils!!*#$";
+        LoadDroneRequest request = LoadDroneRequest.builder()
+                .droneSerialNumber("lorem")
+                .medicationImage("image")
+                .medicationWeight(30.0)
+                .medicationCode(invalidCode)
+                .medicationName("lorem")
+                .build();
+
+        Set<ConstraintViolation<LoadDroneRequest>> violations = validator.validate(request);
+
+        assertTrue(violations.size() > 0, "Validation should produce violations");
+        assertEquals("medication code must only contain upper case letters, numbers, or '_'", violations.iterator().next().getMessage());
+    }
+
+    @Test
     void shouldTestLoadDroneSuccessfullyRegistersWithMedicationsUnderDroneWeightLimit() {
         LoadDroneRequest request = LoadDroneRequest.builder().droneSerialNumber("loremipsum")
                 .medicationCode("abc123").medicationName("strepsils").medicationWeight(200.0)
@@ -214,7 +268,7 @@ class DroneServiceImplTest {
         savedDrone.setSerialNumber("loremipsum");
         savedDrone.setBatteryLevel(100.0);
         savedDrone.setWeightLimit(400.0);
-        savedDrone.setDroneState(DroneState.IDLE);
+        savedDrone.setDroneState(DroneState.LOADED);
         savedDrone.setModel(DroneModel.HEAVYWEIGHT);
 
         Medication savedMedication = new Medication();
@@ -223,7 +277,7 @@ class DroneServiceImplTest {
         savedMedication.setId(1L);
         savedMedication.setWeight(100.0);
         savedMedication.setDrone(savedDrone);
-        savedMedication.setImage(request.getMedicationImage());
+        savedMedication.setImageUrl(request.getMedicationImage());
 
         savedDrone.setMedications(Set.of(savedMedication));
 
@@ -264,7 +318,7 @@ class DroneServiceImplTest {
         savedDrone.setSerialNumber("loremipsum");
         savedDrone.setBatteryLevel(100.0);
         savedDrone.setWeightLimit(400.0);
-        savedDrone.setDroneState(DroneState.IDLE);
+        savedDrone.setDroneState(DroneState.LOADED);
         savedDrone.setModel(DroneModel.HEAVYWEIGHT);
 
         Medication savedMedication = new Medication();
@@ -273,14 +327,13 @@ class DroneServiceImplTest {
         savedMedication.setId(1L);
         savedMedication.setWeight(100.0);
         savedMedication.setDrone(savedDrone);
-        savedMedication.setImage(request.getMedicationImage());
+        savedMedication.setImageUrl(request.getMedicationImage());
 
         savedDrone.setMedications(Set.of(savedMedication));
 
         when(droneRepository.existsBySerialNumberAndId(request.getDroneSerialNumber(), droneId)).thenReturn(true);
         when(droneRepository.findById(droneId)).thenReturn(Optional.of(savedDrone));
 
-        //assertDoesNotThrow(() -> droneService.loadDrone(droneId, request));
         assertThrows(DroneOverLoadException.class, () -> droneService.loadDrone(droneId, request));
     }
 
@@ -306,7 +359,7 @@ class DroneServiceImplTest {
         savedMedication.setId(1L);
         savedMedication.setWeight(100.0);
         savedMedication.setDrone(savedDrone);
-        savedMedication.setImage(request.getMedicationImage());
+        savedMedication.setImageUrl(request.getMedicationImage());
 
         savedDrone.setMedications(Set.of(savedMedication));
 
@@ -315,6 +368,35 @@ class DroneServiceImplTest {
         when(droneRepository.save(any(Drone.class))).thenReturn(savedDrone);
 
         assertDoesNotThrow(() -> droneService.loadDrone(droneId, request));
+    }
+
+    @Test
+    void shouldTestGetLoadedMedicationsSuccessfulFetch() {
+        Long droneId = 1L;
+        Drone drone = new Drone();
+        drone.setId(droneId);
+        drone.setSerialNumber("ABC123");
+        drone.setMedications(new HashSet<>());
+        when(droneRepository.findMedicationsByDroneId(droneId)).thenReturn(Optional.of(drone));
+
+        var result = droneService.getLoadedMedication(droneId);
+
+
+        assertEquals(Constants.ResponseStatusCode.SUCCESS, result.getResponseCode());
+        assertEquals("fetched medications records successfully for drone with id " + droneId, result.getResponseMessage());
+
+        FetchLoadedMedicationsResponse responseData = extractBaseResponseData(result, FetchLoadedMedicationsResponse.class);
+        assertNotNull(responseData);
+        assertEquals(drone.getId(), responseData.getDroneId());
+        assertEquals(drone.getSerialNumber(), responseData.getDroneSerialNumber());
+        assertEquals(drone.getMedications().size(), responseData.getMedications().size());
+    }
+
+    @Test
+    void shouldTestGetLoadedMedicationsWhenDroneNotFound() {
+        Long droneId = 1L;
+        when(droneRepository.findMedicationsByDroneId(droneId)).thenReturn(Optional.empty());
+        assertThrows(DroneNotFoundException.class, () -> droneService.getLoadedMedication(droneId));
     }
 
     <T> T extractBaseResponseData(BaseResponse<?> response, Class<T> responseType) {

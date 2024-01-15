@@ -23,7 +23,7 @@ public class DroneValidatorUtility {
     }
 
     public static void validateDroneBatteryLevel(Drone drone) {
-        if (drone.getBatteryLevel() < 25) {
+        if (drone.getBatteryLevel() < 25.0) {
             throw new DroneBatteryDischargedException("drone cannot be in LOADING state if battery level is below 25%");
         }
     }

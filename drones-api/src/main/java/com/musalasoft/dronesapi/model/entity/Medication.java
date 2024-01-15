@@ -25,8 +25,8 @@ public class Medication {
     @Column(name = "medication_code")
     private String code;
 
-    @Column(name = "medication_image")
-    private String image;
+    @Column(name = "medication_image_url")
+    private String imageUrl;
 
     @ManyToOne
     @JoinColumn(name = "drone_id")

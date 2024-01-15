@@ -88,6 +88,7 @@ public class DroneServiceImpl implements DroneService {
         medication.setDrone(drone);
         medicationRepository.save(medication);
 
+        drone.setDroneState(DroneState.LOADED);
         Drone savedDrone = droneRepository.save(drone);
         DroneDto droneDto = DronePayloadBuilder.convertToDroneDto(savedDrone);
         return ResponsePayloadUtility.createSuccessResponse(droneDto, "drone loaded successfully");

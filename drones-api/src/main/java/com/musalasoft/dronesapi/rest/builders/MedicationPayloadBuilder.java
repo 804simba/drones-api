@@ -17,7 +17,7 @@ public class MedicationPayloadBuilder {
         medicationDto.setId(medication.getId());
         medicationDto.setWeight((medication.getWeight() != null) ? medication.getWeight() : 0.0);
         medicationDto.setName(medication.getName());
-        medicationDto.setImage(medication.getImage());
+        medicationDto.setImage(medication.getImageUrl());
         medicationDto.setCode(medication.getCode());
         return medicationDto;
     }
