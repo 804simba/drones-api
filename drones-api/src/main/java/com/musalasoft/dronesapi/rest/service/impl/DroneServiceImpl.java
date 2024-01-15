@@ -82,11 +82,12 @@ public class DroneServiceImpl implements DroneService {
             throw new DroneNotFoundException(message);
         }
         Drone drone = droneRepository.findById(droneId).get();
+        DroneValidatorUtility.validateDroneWeightLimit(drone, loadDroneRequest.getMedicationWeight());
+        DroneValidatorUtility.validateDroneBatteryLevel(drone);
         Medication medication = MedicationPayloadBuilder.buildMedicationEntity(loadDroneRequest);
         medication.setDrone(drone);
         medicationRepository.save(medication);
-        DroneValidatorUtility.validateDroneWeightLimit(drone, medication.getWeight());
-        DroneValidatorUtility.validateDroneBatteryLevel(drone);
+
         Drone savedDrone = droneRepository.save(drone);
         DroneDto droneDto = DronePayloadBuilder.convertToDroneDto(savedDrone);
         return ResponsePayloadUtility.createSuccessResponse(droneDto, "drone loaded successfully");
