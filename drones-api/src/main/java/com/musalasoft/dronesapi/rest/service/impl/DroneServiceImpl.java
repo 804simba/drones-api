@@ -140,8 +140,11 @@ public class DroneServiceImpl implements DroneService {
         List<Drone> availableDrones = droneRepository.findAll();
         if (!ObjectUtils.isEmpty(availableDrones)) {
             for (Drone drone : availableDrones) {
-                batteryLevelAuditService.auditBatteryLevelCheck(drone.getId(), drone.getBatteryLevel());
+                batteryLevelAuditService.auditDroneBatteryLevel(drone.getId(), drone.getBatteryLevel());
+                log.info("Battery Level scheduler: serial number: {}, batery level {}", drone.getSerialNumber(), drone.getBatteryLevel());
             }
+        } else {
+            log.info("Battery Level scheduler: No available drones found");
         }
     }
 }

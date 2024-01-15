@@ -24,7 +24,7 @@ public class BatteryLevelAuditServiceImpl implements BatteryLevelAuditService {
     }
 
     @Override
-    public void auditBatteryLevelCheck(Long droneId, double batteryLevel) {
+    public void auditDroneBatteryLevel(Long droneId, double batteryLevel) {
         Drone foundDrone = droneRepository.findById(droneId)
                 .orElseThrow(() -> new DroneNotFoundException("drone not found"));
 
