@@ -1,13 +1,15 @@
 package com.musalasoft.dronesapi.rest.service.impl;
 
 import com.musalasoft.dronesapi.core.exception.DroneNotFoundException;
-import com.musalasoft.dronesapi.core.exception.DroneRegistrationException;
+import com.musalasoft.dronesapi.core.exception.DroneAlreadyExistsException;
 import com.musalasoft.dronesapi.core.utils.Constants;
+import com.musalasoft.dronesapi.core.utils.payload.DroneModelMapper;
 import com.musalasoft.dronesapi.core.utils.payload.PaginationPayloadUtility;
 import com.musalasoft.dronesapi.core.utils.payload.ResponsePayloadUtility;
 import com.musalasoft.dronesapi.core.utils.payload.DroneValidatorUtility;
 import com.musalasoft.dronesapi.model.entity.Drone;
 import com.musalasoft.dronesapi.model.entity.Medication;
+import com.musalasoft.dronesapi.model.enums.DroneModel;
 import com.musalasoft.dronesapi.model.enums.DroneState;
 import com.musalasoft.dronesapi.model.payload.dto.DroneDto;
 import com.musalasoft.dronesapi.model.payload.dto.MedicationDto;
@@ -32,6 +34,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,6 +44,7 @@ public class DroneServiceImpl implements DroneService {
     private final DroneRepository droneRepository;
 
     private final MedicationRepository medicationRepository;
+
     private final BatteryLevelAuditService batteryLevelAuditService;
 
     @Autowired
@@ -53,20 +57,17 @@ public class DroneServiceImpl implements DroneService {
     @Override
     @Transactional
     public BaseResponse<?> registerDrone(RegisterDroneRequest registerDroneRequest) {
-        try {
-            boolean droneExists = droneRepository.existsBySerialNumber(registerDroneRequest.getSerialNumber());
-            if (droneExists) {
-                throw new DroneRegistrationException("registration failed: drone already exists");
-            }
-        } catch (Exception e) {
-            return ResponsePayloadUtility.createFailedResponse("registration failed:" + e.getMessage());
+        boolean droneExists = droneRepository.existsBySerialNumber(registerDroneRequest.getSerialNumber());
+        if (droneExists) {
+            throw new DroneAlreadyExistsException("registration failed: drone already exists");
         }
         Drone drone = new Drone();
         drone.setSerialNumber(registerDroneRequest.getSerialNumber());
         drone.setBatteryLevel(registerDroneRequest.getBatteryCapacity());
         drone.setWeightLimit(registerDroneRequest.getWeightLimit());
         drone.setDroneState(DroneState.IDLE);
-        drone.setModel(registerDroneRequest.getModel());
+        DroneModel droneModel = DroneModelMapper.mapModel(registerDroneRequest.getModel());
+        drone.setModel(droneModel);
         Drone savedDrone = droneRepository.save(drone);
         DroneDto droneDto = DronePayloadBuilder.convertToDroneDto(savedDrone);
         return ResponsePayloadUtility.createSuccessResponse(droneDto, "drone registered successfully");
@@ -141,7 +142,7 @@ public class DroneServiceImpl implements DroneService {
         if (!ObjectUtils.isEmpty(availableDrones)) {
             for (Drone drone : availableDrones) {
                 batteryLevelAuditService.auditDroneBatteryLevel(drone.getId(), drone.getBatteryLevel());
-                log.info("Battery Level scheduler: serial number: {}, batery level {}", drone.getSerialNumber(), drone.getBatteryLevel());
+                log.info("Battery Level scheduler: serial number: {}, batery level {}, time {}", drone.getSerialNumber(), drone.getBatteryLevel(), LocalDateTime.now());
             }
         } else {
             log.info("Battery Level scheduler: No available drones found");

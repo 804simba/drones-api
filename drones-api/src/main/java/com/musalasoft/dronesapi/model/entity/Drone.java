@@ -1,5 +1,6 @@
 package com.musalasoft.dronesapi.model.entity;
 
+import com.musalasoft.dronesapi.model.enums.DroneModel;
 import com.musalasoft.dronesapi.model.enums.DroneState;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -24,11 +25,12 @@ public class Drone {
     @Column(name = "drone_id")
     private Long id;
 
-    @Column(name = "serial_number", unique = true)
+    @Column(name = "serial_number", unique = true, length = 100)
     private String serialNumber;
 
     @Column(name = "model")
-    private String model;
+    @Enumerated(EnumType.STRING)
+    private DroneModel model;
 
     @Column(name = "weight_limit")
     private double weightLimit;

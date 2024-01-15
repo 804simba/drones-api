@@ -14,7 +14,7 @@ public class DronePayloadBuilder {
         droneDto.setSerialNumber(drone.getSerialNumber());
         droneDto.setBatteryLevel(drone.getBatteryLevel());
         droneDto.setWeightLimit(drone.getWeightLimit());
-        droneDto.setModel(drone.getModel());
+        droneDto.setModel(drone.getModel().name());
         droneDto.setState(drone.getDroneState().name());
         Set<MedicationDto> medications = null;
         if (drone.getMedications() != null) {

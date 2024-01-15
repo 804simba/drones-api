@@ -3,7 +3,7 @@ package com.musalasoft.dronesapi.core.exception.advice;
 import com.musalasoft.dronesapi.core.exception.DroneBatteryDischargedException;
 import com.musalasoft.dronesapi.core.exception.DroneNotFoundException;
 import com.musalasoft.dronesapi.core.exception.DroneOverLoadException;
-import com.musalasoft.dronesapi.core.exception.DroneRegistrationException;
+import com.musalasoft.dronesapi.core.exception.DroneAlreadyExistsException;
 import com.musalasoft.dronesapi.core.utils.Constants;
 import com.musalasoft.dronesapi.model.payload.response.BaseResponse;
 import org.springframework.core.Ordered;
@@ -25,61 +25,58 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 @ControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class ApplicationExceptionHandler {
-    @ExceptionHandler(DroneRegistrationException.class)
-    public BaseResponse<?> droneRegistrationException(DroneRegistrationException exception) {
+    @ExceptionHandler(DroneAlreadyExistsException.class)
+    public BaseResponse<?> droneAlreadyExistsException(DroneAlreadyExistsException exception) {
         return BaseResponse.builder().responseCode(BAD_REQUEST.value())
-                .responseMessage(exception.getMessage())
-                .data(null)
-                .build();
+                .responseMessage(exception.getMessage()).data(null).build();
     }
 
     @ExceptionHandler(DroneNotFoundException.class)
     public BaseResponse<?> droneNotFoundException(DroneNotFoundException exception) {
         return BaseResponse.builder().responseCode(HttpStatus.NOT_FOUND.value())
-                .responseMessage(exception.getMessage())
-                .data(null)
-                .build();
+                .responseMessage(exception.getMessage()).data(null).build();
     }
 
     @ExceptionHandler(DroneOverLoadException.class)
     public BaseResponse<?> droneOverloadException(DroneOverLoadException exception) {
         return BaseResponse.builder().responseCode(BAD_REQUEST.value())
-                .responseMessage(exception.getMessage())
-                .data(null)
-                .build();
+                .responseMessage(exception.getMessage()).data(null).build();
     }
 
     @ExceptionHandler(HttpServerErrorException.InternalServerError.class)
     public BaseResponse<?> internalServerError(HttpServerErrorException exception) {
         return BaseResponse.builder().responseCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .responseMessage(exception.getMessage())
-                .data(null)
+                .responseMessage(exception.getMessage()).data(null)
                 .build();
     }
 
     @ExceptionHandler(Exception.class)
     public BaseResponse<?> exception(Exception exception) {
         return BaseResponse.builder().responseCode(BAD_REQUEST.value())
-                .responseMessage(exception.getMessage())
-                .data(null)
-                .build();
+                .responseMessage(exception.getMessage()).data(null).build();
     }
 
     @ExceptionHandler(DroneBatteryDischargedException.class)
     public BaseResponse<?> droneBatteryDischargedException(DroneBatteryDischargedException exception) {
-        return BaseResponse.builder().responseCode(BAD_REQUEST.value())
-                .responseMessage(exception.getMessage())
-                .data(null)
-                .build();
+        return BaseResponse.builder().responseCode(BAD_REQUEST.value()).responseMessage(exception.getMessage())
+                .data(null).build();
     }
 
     @ResponseStatus(BAD_REQUEST)
     @ResponseBody
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public BaseResponse<?> methodArgumentNotValidException(MethodArgumentNotValidException ex) {
-        BindingResult result = ex.getBindingResult();
+    public BaseResponse<?> methodArgumentNotValidException(MethodArgumentNotValidException exception) {
+        BindingResult result = exception.getBindingResult();
         List<FieldError> fieldErrors = result.getFieldErrors();
         String errorMessage = fieldErrors.get(0).getDefaultMessage();
         return BaseResponse.builder().responseMessage(errorMessage).responseCode(Constants.ResponseStatusCode.FAILED).build();
+    }
+
+    @ResponseStatus(BAD_REQUEST)
+    @ResponseBody
+    @ExceptionHandler(IllegalArgumentException.class)
+    public BaseResponse<?> methodArgumentNotValidException(IllegalArgumentException exception) {
+        return BaseResponse.builder().responseMessage(exception.getMessage())
+                .responseCode(Constants.ResponseStatusCode.FAILED).build();
     }
 }

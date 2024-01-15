@@ -31,5 +31,7 @@ public class RegisterDroneRequest implements Serializable {
 
     @NotNull(message = "battery capacity must not be null")
     @JsonProperty(value = "battery_capacity", required = true)
+    @Max(value = 100, message = "battery capacity must not be greater than 100%")
+    @PositiveOrZero(message = "battery capacity must not be negative")
     private Integer batteryCapacity;
 }
