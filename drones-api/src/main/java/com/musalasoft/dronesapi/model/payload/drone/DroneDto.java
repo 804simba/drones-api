@@ -1,5 +1,6 @@
-package com.musalasoft.dronesapi.model.payload.dto;
+package com.musalasoft.dronesapi.model.payload.drone;
 
+import com.musalasoft.dronesapi.model.payload.medication.MedicationDto;
 import lombok.Data;
 
 import java.util.Set;

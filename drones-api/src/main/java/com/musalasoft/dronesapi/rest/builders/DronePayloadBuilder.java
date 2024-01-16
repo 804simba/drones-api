@@ -1,8 +1,8 @@
 package com.musalasoft.dronesapi.rest.builders;
 
 import com.musalasoft.dronesapi.model.entity.Drone;
-import com.musalasoft.dronesapi.model.payload.dto.DroneDto;
-import com.musalasoft.dronesapi.model.payload.dto.MedicationDto;
+import com.musalasoft.dronesapi.model.payload.drone.DroneDto;
+import com.musalasoft.dronesapi.model.payload.medication.MedicationDto;
 
 import java.util.Set;
 import java.util.stream.Collectors;

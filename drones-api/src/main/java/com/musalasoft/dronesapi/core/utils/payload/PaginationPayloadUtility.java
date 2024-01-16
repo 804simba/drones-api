@@ -1,6 +1,6 @@
 package com.musalasoft.dronesapi.core.utils.payload;
 
-import com.musalasoft.dronesapi.model.payload.response.PagedResponse;
+import com.musalasoft.dronesapi.model.payload.pagination.PagedResponse;
 import org.springframework.data.domain.Page;
 
 import java.time.LocalDateTime;

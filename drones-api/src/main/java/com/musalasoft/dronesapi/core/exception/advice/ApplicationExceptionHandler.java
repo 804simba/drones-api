@@ -1,11 +1,8 @@
 package com.musalasoft.dronesapi.core.exception.advice;
 
-import com.musalasoft.dronesapi.core.exception.DroneBatteryDischargedException;
-import com.musalasoft.dronesapi.core.exception.DroneNotFoundException;
-import com.musalasoft.dronesapi.core.exception.DroneOverLoadException;
-import com.musalasoft.dronesapi.core.exception.DroneAlreadyExistsException;
+import com.musalasoft.dronesapi.core.exception.*;
 import com.musalasoft.dronesapi.core.utils.Constants;
-import com.musalasoft.dronesapi.model.payload.response.BaseResponse;
+import com.musalasoft.dronesapi.model.payload.base.BaseResponse;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -20,29 +17,37 @@ import org.springframework.web.client.HttpServerErrorException;
 
 import java.util.List;
 
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.*;
 
 @ControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class ApplicationExceptionHandler {
+    @ResponseStatus(BAD_REQUEST)
+    @ResponseBody
     @ExceptionHandler(DroneAlreadyExistsException.class)
     public BaseResponse<?> droneAlreadyExistsException(DroneAlreadyExistsException exception) {
         return BaseResponse.builder().responseCode(BAD_REQUEST.value())
                 .responseMessage(exception.getMessage()).data(null).build();
     }
 
+    @ResponseStatus(NOT_FOUND)
+    @ResponseBody
     @ExceptionHandler(DroneNotFoundException.class)
     public BaseResponse<?> droneNotFoundException(DroneNotFoundException exception) {
         return BaseResponse.builder().responseCode(HttpStatus.NOT_FOUND.value())
                 .responseMessage(exception.getMessage()).data(null).build();
     }
 
+    @ResponseStatus(BAD_REQUEST)
+    @ResponseBody
     @ExceptionHandler(DroneOverLoadException.class)
     public BaseResponse<?> droneOverloadException(DroneOverLoadException exception) {
         return BaseResponse.builder().responseCode(BAD_REQUEST.value())
                 .responseMessage(exception.getMessage()).data(null).build();
     }
 
+    @ResponseStatus(INTERNAL_SERVER_ERROR)
+    @ResponseBody
     @ExceptionHandler(HttpServerErrorException.InternalServerError.class)
     public BaseResponse<?> internalServerError(HttpServerErrorException exception) {
         return BaseResponse.builder().responseCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -50,12 +55,16 @@ public class ApplicationExceptionHandler {
                 .build();
     }
 
+    @ResponseStatus(BAD_REQUEST)
+    @ResponseBody
     @ExceptionHandler(Exception.class)
     public BaseResponse<?> exception(Exception exception) {
         return BaseResponse.builder().responseCode(BAD_REQUEST.value())
                 .responseMessage(exception.getMessage()).data(null).build();
     }
 
+    @ResponseStatus(BAD_REQUEST)
+    @ResponseBody
     @ExceptionHandler(DroneBatteryDischargedException.class)
     public BaseResponse<?> droneBatteryDischargedException(DroneBatteryDischargedException exception) {
         return BaseResponse.builder().responseCode(BAD_REQUEST.value()).responseMessage(exception.getMessage())
@@ -76,6 +85,14 @@ public class ApplicationExceptionHandler {
     @ResponseBody
     @ExceptionHandler(IllegalArgumentException.class)
     public BaseResponse<?> methodArgumentNotValidException(IllegalArgumentException exception) {
+        return BaseResponse.builder().responseMessage(exception.getMessage())
+                .responseCode(Constants.ResponseStatusCode.FAILED).build();
+    }
+
+    @ResponseStatus(BAD_REQUEST)
+    @ResponseBody
+    @ExceptionHandler(FileUploadException.class)
+    public BaseResponse<?> fileUploadException(FileUploadException exception) {
         return BaseResponse.builder().responseMessage(exception.getMessage())
                 .responseCode(Constants.ResponseStatusCode.FAILED).build();
     }

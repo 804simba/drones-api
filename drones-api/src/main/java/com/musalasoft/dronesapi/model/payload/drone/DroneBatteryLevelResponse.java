@@ -1,4 +1,4 @@
-package com.musalasoft.dronesapi.model.payload.response;
+package com.musalasoft.dronesapi.model.payload.drone;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -10,7 +10,7 @@ import java.io.Serializable;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class BatteryLevelResponse implements Serializable {
+public class DroneBatteryLevelResponse implements Serializable {
     @JsonProperty("drone_serial_number")
     private String droneSerialNumber;
 

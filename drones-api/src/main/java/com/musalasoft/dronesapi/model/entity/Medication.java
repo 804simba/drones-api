@@ -10,11 +10,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Medication {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "medication_id")
-    private Long id;
+public class Medication extends BaseEntity {
 
     @Column(name = "medication_name")
     private String name;

@@ -1,4 +1,4 @@
-package com.musalasoft.dronesapi.model.payload.request;
+package com.musalasoft.dronesapi.model.payload.drone;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -35,7 +35,6 @@ public class LoadDroneRequest implements Serializable {
     @JsonProperty(value = "medication_code", required = true)
     private String medicationCode;
 
-    @NotNull(message = "medication image must not be null")
-    @JsonProperty(value = "medication_image", required = true)
-    private String medicationImage;
+    @JsonProperty(value = "medication_image_id")
+    private Long medicationImageId;
 }

@@ -1,25 +1,27 @@
 package com.musalasoft.dronesapi.rest.service.impl;
 
-import com.musalasoft.dronesapi.core.exception.DroneNotFoundException;
 import com.musalasoft.dronesapi.core.exception.DroneAlreadyExistsException;
+import com.musalasoft.dronesapi.core.exception.DroneNotFoundException;
 import com.musalasoft.dronesapi.core.utils.Constants;
 import com.musalasoft.dronesapi.core.utils.payload.DroneModelMapper;
+import com.musalasoft.dronesapi.core.utils.payload.DroneValidatorUtility;
 import com.musalasoft.dronesapi.core.utils.payload.PaginationPayloadUtility;
 import com.musalasoft.dronesapi.core.utils.payload.ResponsePayloadUtility;
-import com.musalasoft.dronesapi.core.utils.payload.DroneValidatorUtility;
 import com.musalasoft.dronesapi.model.entity.Drone;
+import com.musalasoft.dronesapi.model.entity.Media;
 import com.musalasoft.dronesapi.model.entity.Medication;
 import com.musalasoft.dronesapi.model.enums.DroneModel;
 import com.musalasoft.dronesapi.model.enums.DroneState;
-import com.musalasoft.dronesapi.model.payload.dto.DroneDto;
-import com.musalasoft.dronesapi.model.payload.dto.MedicationDto;
-import com.musalasoft.dronesapi.model.payload.request.LoadDroneRequest;
-import com.musalasoft.dronesapi.model.payload.request.RegisterDroneRequest;
-import com.musalasoft.dronesapi.model.payload.response.BaseResponse;
-import com.musalasoft.dronesapi.model.payload.response.BatteryLevelResponse;
-import com.musalasoft.dronesapi.model.payload.response.FetchLoadedMedicationsResponse;
-import com.musalasoft.dronesapi.model.payload.response.PagedResponse;
+import com.musalasoft.dronesapi.model.payload.base.BaseResponse;
+import com.musalasoft.dronesapi.model.payload.drone.DroneBatteryLevelResponse;
+import com.musalasoft.dronesapi.model.payload.drone.DroneDto;
+import com.musalasoft.dronesapi.model.payload.drone.LoadDroneRequest;
+import com.musalasoft.dronesapi.model.payload.drone.RegisterDroneRequest;
+import com.musalasoft.dronesapi.model.payload.medication.FetchLoadedMedicationsResponse;
+import com.musalasoft.dronesapi.model.payload.medication.MedicationDto;
+import com.musalasoft.dronesapi.model.payload.pagination.PagedResponse;
 import com.musalasoft.dronesapi.model.repository.DroneRepository;
+import com.musalasoft.dronesapi.model.repository.MediaRepository;
 import com.musalasoft.dronesapi.model.repository.MedicationRepository;
 import com.musalasoft.dronesapi.rest.builders.DronePayloadBuilder;
 import com.musalasoft.dronesapi.rest.builders.MedicationPayloadBuilder;
@@ -37,6 +39,7 @@ import org.springframework.util.ObjectUtils;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -45,13 +48,16 @@ public class DroneServiceImpl implements DroneService {
 
     private final MedicationRepository medicationRepository;
 
+    private final MediaRepository mediaRepository;
+
     private final BatteryLevelAuditService batteryLevelAuditService;
 
     @Autowired
-    public DroneServiceImpl(DroneRepository droneRepository, BatteryLevelAuditService batteryLevelAuditService, MedicationRepository medicationRepository) {
+    public DroneServiceImpl(DroneRepository droneRepository, BatteryLevelAuditService batteryLevelAuditService, MedicationRepository medicationRepository, MediaRepository mediaRepository) {
         this.droneRepository = droneRepository;
         this.batteryLevelAuditService = batteryLevelAuditService;
         this.medicationRepository = medicationRepository;
+        this.mediaRepository = mediaRepository;
     }
 
     @Override
@@ -85,6 +91,9 @@ public class DroneServiceImpl implements DroneService {
         DroneValidatorUtility.validateDroneWeightLimit(drone, loadDroneRequest.getMedicationWeight());
         DroneValidatorUtility.validateDroneBatteryLevel(drone);
         Medication medication = MedicationPayloadBuilder.buildMedicationEntity(loadDroneRequest);
+        Optional<Media> media = mediaRepository.findById(loadDroneRequest.getMedicationImageId());
+        String imageUrl  = ((media.isEmpty()) ? Constants.Media.PLACEHOLDER_URL : media.get().getUrl());
+        medication.setImageUrl(imageUrl);
         medication.setDrone(drone);
         medicationRepository.save(medication);
 
@@ -127,15 +136,15 @@ public class DroneServiceImpl implements DroneService {
     @Override
     @Transactional(readOnly = true)
     public BaseResponse<?> getDroneBatteryLevel(Long droneId) {
-        BatteryLevelResponse batteryLevelResponse = new BatteryLevelResponse();
+        DroneBatteryLevelResponse droneBatteryLevelResponse = new DroneBatteryLevelResponse();
         try {
             Drone drone = droneRepository.findById(droneId).orElseThrow(() -> new DroneNotFoundException("drone not found"));
-            batteryLevelResponse.setDroneSerialNumber(drone.getSerialNumber());
-            batteryLevelResponse.setBatteryLevel(drone.getBatteryLevel());
+            droneBatteryLevelResponse.setDroneSerialNumber(drone.getSerialNumber());
+            droneBatteryLevelResponse.setBatteryLevel(drone.getBatteryLevel());
         } catch (Exception e) {
             return ResponsePayloadUtility.createFailedResponse("drone not found");
         }
-        return ResponsePayloadUtility.createSuccessResponse(batteryLevelResponse, Constants.ResponseMessages.SUCCESS);
+        return ResponsePayloadUtility.createSuccessResponse(droneBatteryLevelResponse, Constants.ResponseMessages.SUCCESS);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.musalasoft.dronesapi.model.payload.response;
+package com.musalasoft.dronesapi.model.payload.base;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;

@@ -1,4 +1,4 @@
-package com.musalasoft.dronesapi.model.payload.dto;
+package com.musalasoft.dronesapi.model.payload.medication;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

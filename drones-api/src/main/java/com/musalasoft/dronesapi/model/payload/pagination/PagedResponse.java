@@ -1,4 +1,4 @@
-package com.musalasoft.dronesapi.model.payload.response;
+package com.musalasoft.dronesapi.model.payload.pagination;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;

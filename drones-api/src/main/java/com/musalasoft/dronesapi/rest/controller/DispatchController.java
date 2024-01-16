@@ -1,8 +1,8 @@
 package com.musalasoft.dronesapi.rest.controller;
 
-import com.musalasoft.dronesapi.model.payload.request.LoadDroneRequest;
-import com.musalasoft.dronesapi.model.payload.request.RegisterDroneRequest;
-import com.musalasoft.dronesapi.model.payload.response.BaseResponse;
+import com.musalasoft.dronesapi.model.payload.drone.LoadDroneRequest;
+import com.musalasoft.dronesapi.model.payload.drone.RegisterDroneRequest;
+import com.musalasoft.dronesapi.model.payload.base.BaseResponse;
 import com.musalasoft.dronesapi.rest.service.DroneService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

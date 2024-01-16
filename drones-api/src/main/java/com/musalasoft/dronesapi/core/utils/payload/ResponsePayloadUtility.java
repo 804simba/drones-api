@@ -1,7 +1,7 @@
 package com.musalasoft.dronesapi.core.utils.payload;
 
 import com.musalasoft.dronesapi.core.utils.Constants;
-import com.musalasoft.dronesapi.model.payload.response.BaseResponse;
+import com.musalasoft.dronesapi.model.payload.base.BaseResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.ObjectUtils;
 

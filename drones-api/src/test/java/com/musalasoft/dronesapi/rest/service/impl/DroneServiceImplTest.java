@@ -9,12 +9,13 @@ import com.musalasoft.dronesapi.model.entity.Drone;
 import com.musalasoft.dronesapi.model.entity.Medication;
 import com.musalasoft.dronesapi.model.enums.DroneModel;
 import com.musalasoft.dronesapi.model.enums.DroneState;
-import com.musalasoft.dronesapi.model.payload.dto.DroneDto;
-import com.musalasoft.dronesapi.model.payload.request.LoadDroneRequest;
-import com.musalasoft.dronesapi.model.payload.request.RegisterDroneRequest;
-import com.musalasoft.dronesapi.model.payload.response.BaseResponse;
-import com.musalasoft.dronesapi.model.payload.response.FetchLoadedMedicationsResponse;
+import com.musalasoft.dronesapi.model.payload.drone.DroneDto;
+import com.musalasoft.dronesapi.model.payload.drone.LoadDroneRequest;
+import com.musalasoft.dronesapi.model.payload.drone.RegisterDroneRequest;
+import com.musalasoft.dronesapi.model.payload.base.BaseResponse;
+import com.musalasoft.dronesapi.model.payload.medication.FetchLoadedMedicationsResponse;
 import com.musalasoft.dronesapi.model.repository.DroneRepository;
+import com.musalasoft.dronesapi.model.repository.MediaRepository;
 import com.musalasoft.dronesapi.model.repository.MedicationRepository;
 import com.musalasoft.dronesapi.rest.service.BatteryLevelAuditService;
 import jakarta.validation.ConstraintViolation;
@@ -42,6 +43,9 @@ import static org.mockito.Mockito.*;
 class DroneServiceImplTest {
     @Mock
     private DroneRepository droneRepository;
+
+    @Mock
+    private MediaRepository mediaRepository;
 
     @Mock
     private BatteryLevelAuditService batteryLevelAuditService;
@@ -210,7 +214,7 @@ class DroneServiceImplTest {
         String invalidName = "strepsils!!*#$";
         LoadDroneRequest request = LoadDroneRequest.builder()
                 .droneSerialNumber("lorem")
-                .medicationImage("image")
+                .medicationImageId(1L)
                 .medicationWeight(30.0)
                 .medicationCode("MED_2022")
                 .medicationName(invalidName)
@@ -227,7 +231,7 @@ class DroneServiceImplTest {
         String validName = "Aspirin";
         LoadDroneRequest request = LoadDroneRequest.builder()
                 .droneSerialNumber("lorem")
-                .medicationImage("image")
+                .medicationImageId(1L)
                 .medicationWeight(30.0)
                 .medicationCode("MED_2022")
                 .medicationName(validName)
@@ -243,7 +247,7 @@ class DroneServiceImplTest {
         String invalidCode = "strepsils!!*#$";
         LoadDroneRequest request = LoadDroneRequest.builder()
                 .droneSerialNumber("lorem")
-                .medicationImage("image")
+                .medicationImageId(1L)
                 .medicationWeight(30.0)
                 .medicationCode(invalidCode)
                 .medicationName("lorem")
@@ -259,7 +263,7 @@ class DroneServiceImplTest {
     void shouldTestLoadDroneSuccessfullyRegistersWithMedicationsUnderDroneWeightLimit() {
         LoadDroneRequest request = LoadDroneRequest.builder().droneSerialNumber("loremipsum")
                 .medicationCode("abc123").medicationName("strepsils").medicationWeight(200.0)
-                .medicationImage("dummy-image").build();
+                .medicationImageId(1L).build();
 
         Long droneId = 1L;
 
@@ -277,12 +281,13 @@ class DroneServiceImplTest {
         savedMedication.setId(1L);
         savedMedication.setWeight(100.0);
         savedMedication.setDrone(savedDrone);
-        savedMedication.setImageUrl(request.getMedicationImage());
+        savedMedication.setImageUrl(Constants.Media.PLACEHOLDER_URL);
 
         savedDrone.setMedications(Set.of(savedMedication));
 
         when(droneRepository.existsBySerialNumberAndId(request.getDroneSerialNumber(), droneId)).thenReturn(true);
         when(droneRepository.findById(droneId)).thenReturn(Optional.of(savedDrone));
+        when(mediaRepository.findById(request.getMedicationImageId())).thenReturn(Optional.empty());
 
         when(medicationRepository.save(any(Medication.class))).thenReturn(savedMedication);
         when(droneRepository.save(any(Drone.class))).thenReturn(savedDrone);
@@ -309,7 +314,7 @@ class DroneServiceImplTest {
     void shouldTestLoadDroneFailsForMedicationOverDroneWeightLimit() {
         LoadDroneRequest request = LoadDroneRequest.builder().droneSerialNumber("loremipsum")
                 .medicationCode("abc123").medicationName("strepsils").medicationWeight(500.0)
-                .medicationImage("dummy-image").build();
+                .medicationImageId(1L).build();
 
         Long droneId = 1L;
 
@@ -327,7 +332,7 @@ class DroneServiceImplTest {
         savedMedication.setId(1L);
         savedMedication.setWeight(100.0);
         savedMedication.setDrone(savedDrone);
-        savedMedication.setImageUrl(request.getMedicationImage());
+        savedMedication.setImageUrl(Constants.Media.PLACEHOLDER_URL);
 
         savedDrone.setMedications(Set.of(savedMedication));
 
@@ -341,7 +346,7 @@ class DroneServiceImplTest {
     void shouldTestLoadDroneFailsForMedicationUnderDroneWeightLimit() {
         LoadDroneRequest request = LoadDroneRequest.builder().droneSerialNumber("loremipsum")
                 .medicationCode("abc123").medicationName("strepsils").medicationWeight(100.0)
-                .medicationImage("dummy-image").build();
+                .medicationImageId(1L).build();
 
         Long droneId = 1L;
 
@@ -359,13 +364,14 @@ class DroneServiceImplTest {
         savedMedication.setId(1L);
         savedMedication.setWeight(100.0);
         savedMedication.setDrone(savedDrone);
-        savedMedication.setImageUrl(request.getMedicationImage());
+        savedMedication.setImageUrl(Constants.Media.PLACEHOLDER_URL);
 
         savedDrone.setMedications(Set.of(savedMedication));
 
         when(droneRepository.existsBySerialNumberAndId(request.getDroneSerialNumber(), droneId)).thenReturn(true);
         when(droneRepository.findById(droneId)).thenReturn(Optional.of(savedDrone));
         when(droneRepository.save(any(Drone.class))).thenReturn(savedDrone);
+        when(mediaRepository.findById(request.getMedicationImageId())).thenReturn(Optional.empty());
 
         assertDoesNotThrow(() -> droneService.loadDrone(droneId, request));
     }

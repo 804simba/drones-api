@@ -15,11 +15,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class DroneBatteryLevel {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "drone_battery_level_id")
-    private Long id;
+public class DroneBatteryLevel extends BaseEntity{
 
     @Column(name = "battery_level")
     private Double batteryLevel;

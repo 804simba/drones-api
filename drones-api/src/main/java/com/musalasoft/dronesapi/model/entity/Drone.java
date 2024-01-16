@@ -19,11 +19,7 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Drone {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "drone_id")
-    private Long id;
+public class Drone extends BaseEntity {
 
     @Column(name = "serial_number", unique = true, length = 100)
     private String serialNumber;
