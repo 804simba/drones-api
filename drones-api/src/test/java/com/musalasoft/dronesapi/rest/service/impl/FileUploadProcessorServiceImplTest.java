@@ -72,7 +72,6 @@ class FileUploadProcessorServiceImplTest {
     @Test
     @SneakyThrows
     void handleFileUploadRequest_ExceedsFileSizeLimit() {
-        // Arrange
         MultipartFile mockMultipartFile = createMockMultipartFile("image/jpg", 10 * 1024 * 1024);
 
         Field maxUploadFileSizeField = FileUploadProcessorServiceImpl.class.getDeclaredField("MAX_UPLOAD_FILE_SIZE");
