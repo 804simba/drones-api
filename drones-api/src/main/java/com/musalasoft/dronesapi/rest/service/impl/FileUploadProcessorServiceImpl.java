@@ -2,6 +2,7 @@ package com.musalasoft.dronesapi.rest.service.impl;
 
 import com.musalasoft.dronesapi.core.exception.FileUploadException;
 import com.musalasoft.dronesapi.core.utils.Constants;
+import com.musalasoft.dronesapi.core.utils.media.FilesUtils;
 import com.musalasoft.dronesapi.model.entity.Media;
 import com.musalasoft.dronesapi.model.payload.base.BaseResponse;
 import com.musalasoft.dronesapi.model.payload.media.FileUploadResponse;
@@ -35,19 +36,19 @@ public class FileUploadProcessorServiceImpl implements FileUploadProcessorServic
             if (!ObjectUtils.isEmpty(multipartFile.getContentType())) {
                 if (multipartFile.getContentType().equalsIgnoreCase(MediaType.IMAGE_PNG_VALUE) || multipartFile.getContentType().equalsIgnoreCase(MediaType.IMAGE_JPEG_VALUE)
                         || multipartFile.getContentType().equalsIgnoreCase(MediaType.IMAGE_GIF_VALUE) || multipartFile.getContentType().equalsIgnoreCase("image/jpg")) {
-                    double fileSize = resolveFileSizeInMegaBytes(multipartFile.getSize());
-                    double applicationMaxFileSize = parseMaxFileSize();
+                    double fileSize = FilesUtils.resolveFileSizeInMegaBytes(multipartFile.getSize());
+                    double applicationMaxFileSize = FilesUtils.parseMaxFileSize(MAX_UPLOAD_FILE_SIZE);
                     if (fileSize <= applicationMaxFileSize) {
                         Media uploadedMedia = cloudinaryFileUploadService.handleFileUpload(multipartFile);
                         mediaRepository.save(uploadedMedia);
-                        deleteFileUpload(multipartFile);
+                        FilesUtils.deleteFileUpload(multipartFile);
                         FileUploadResponse fileUploadResponse = FileUploadResponse.builder().mediaName(uploadedMedia.getFileName()).mediaId(uploadedMedia.getId())
                                 .url(uploadedMedia.getUrl()).mediaType(uploadedMedia.getMediaType()).publicId(uploadedMedia.getPublicId()).build();
                         return BaseResponse.builder().responseCode(Constants.ResponseStatusCode.SUCCESS)
                                 .responseMessage("file upload successful").responseTime(LocalDateTime.now())
                                 .data(fileUploadResponse).build();
                     } else {
-                        deleteFileUpload(multipartFile);
+                        FilesUtils.deleteFileUpload(multipartFile);
                         throw new FileUploadException("file size exceeds maximum upload size");
                     }
                 }
@@ -56,25 +57,5 @@ public class FileUploadProcessorServiceImpl implements FileUploadProcessorServic
             }
         }
         throw new FileUploadException("file upload failed");
-    }
-
-    private double parseMaxFileSize() {
-        String numericValue = MAX_UPLOAD_FILE_SIZE.replaceAll("[^\\d.]", "");
-        return Double.parseDouble(numericValue);
-    }
-
-    private void deleteFileUpload(MultipartFile multipartFile) {
-        try {
-            if (multipartFile.getResource().isFile()) {
-                multipartFile.getResource().getFile().delete();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    private double resolveFileSizeInMegaBytes(long fileSize) {
-        return (double) fileSize / (1024 * 1024);
     }
 }

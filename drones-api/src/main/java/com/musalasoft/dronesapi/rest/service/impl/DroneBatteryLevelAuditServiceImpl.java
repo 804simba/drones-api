@@ -5,20 +5,20 @@ import com.musalasoft.dronesapi.model.entity.Drone;
 import com.musalasoft.dronesapi.model.entity.DroneBatteryLevel;
 import com.musalasoft.dronesapi.model.repository.DroneBatteryLevelRepository;
 import com.musalasoft.dronesapi.model.repository.DroneRepository;
-import com.musalasoft.dronesapi.rest.service.BatteryLevelAuditService;
+import com.musalasoft.dronesapi.rest.service.DroneBatteryLevelAuditService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
-public class BatteryLevelAuditServiceImpl implements BatteryLevelAuditService {
+public class DroneBatteryLevelAuditServiceImpl implements DroneBatteryLevelAuditService {
     private final DroneRepository droneRepository;
 
     private final DroneBatteryLevelRepository droneBatteryLevelRepository;
 
     @Autowired
-    public BatteryLevelAuditServiceImpl(DroneRepository droneRepository, DroneBatteryLevelRepository droneBatteryLevelRepository) {
+    public DroneBatteryLevelAuditServiceImpl(DroneRepository droneRepository, DroneBatteryLevelRepository droneBatteryLevelRepository) {
         this.droneRepository = droneRepository;
         this.droneBatteryLevelRepository = droneBatteryLevelRepository;
     }

@@ -1,5 +1,5 @@
 package com.musalasoft.dronesapi.rest.service;
 
-public interface BatteryLevelAuditService {
+public interface DroneBatteryLevelAuditService {
     void auditDroneBatteryLevel(Long droneId, double batteryLevel);
 }

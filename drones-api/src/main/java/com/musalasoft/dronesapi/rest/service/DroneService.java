@@ -15,5 +15,5 @@ public interface DroneService {
 
     BaseResponse<?> getDroneBatteryLevel(Long droneId);
 
-    void checkBatteryLevelsSchedule();
+    void checkDroneBatteryLevelsSchedule();
 }

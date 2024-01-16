@@ -18,6 +18,6 @@ public class CheckBatteryLevelJob {
 
     @Scheduled(fixedRate = 120000)
     public void checkBatteryLevelScheduler() {
-        droneService.checkBatteryLevelsSchedule();
+        droneService.checkDroneBatteryLevelsSchedule();
     }
 }

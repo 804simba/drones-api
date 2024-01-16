@@ -25,7 +25,7 @@ import com.musalasoft.dronesapi.model.repository.MediaRepository;
 import com.musalasoft.dronesapi.model.repository.MedicationRepository;
 import com.musalasoft.dronesapi.rest.builders.DronePayloadBuilder;
 import com.musalasoft.dronesapi.rest.builders.MedicationPayloadBuilder;
-import com.musalasoft.dronesapi.rest.service.BatteryLevelAuditService;
+import com.musalasoft.dronesapi.rest.service.DroneBatteryLevelAuditService;
 import com.musalasoft.dronesapi.rest.service.DroneService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,12 +50,12 @@ public class DroneServiceImpl implements DroneService {
 
     private final MediaRepository mediaRepository;
 
-    private final BatteryLevelAuditService batteryLevelAuditService;
+    private final DroneBatteryLevelAuditService droneBatteryLevelAuditService;
 
     @Autowired
-    public DroneServiceImpl(DroneRepository droneRepository, BatteryLevelAuditService batteryLevelAuditService, MedicationRepository medicationRepository, MediaRepository mediaRepository) {
+    public DroneServiceImpl(DroneRepository droneRepository, DroneBatteryLevelAuditService droneBatteryLevelAuditService, MedicationRepository medicationRepository, MediaRepository mediaRepository) {
         this.droneRepository = droneRepository;
-        this.batteryLevelAuditService = batteryLevelAuditService;
+        this.droneBatteryLevelAuditService = droneBatteryLevelAuditService;
         this.medicationRepository = medicationRepository;
         this.mediaRepository = mediaRepository;
     }
@@ -148,11 +148,11 @@ public class DroneServiceImpl implements DroneService {
     }
 
     @Override
-    public void checkBatteryLevelsSchedule() {
+    public void checkDroneBatteryLevelsSchedule() {
         List<Drone> availableDrones = droneRepository.findAll();
         if (!ObjectUtils.isEmpty(availableDrones)) {
             for (Drone drone : availableDrones) {
-                batteryLevelAuditService.auditDroneBatteryLevel(drone.getId(), drone.getBatteryLevel());
+                droneBatteryLevelAuditService.auditDroneBatteryLevel(drone.getId(), drone.getBatteryLevel());
                 log.info("Battery Level scheduler: serial number: {}, batery level {}, time {}", drone.getSerialNumber(), drone.getBatteryLevel(), LocalDateTime.now());
             }
         } else {

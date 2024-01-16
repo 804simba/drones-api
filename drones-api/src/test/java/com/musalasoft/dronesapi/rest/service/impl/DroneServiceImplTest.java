@@ -9,15 +9,18 @@ import com.musalasoft.dronesapi.model.entity.Drone;
 import com.musalasoft.dronesapi.model.entity.Medication;
 import com.musalasoft.dronesapi.model.enums.DroneModel;
 import com.musalasoft.dronesapi.model.enums.DroneState;
+import com.musalasoft.dronesapi.model.payload.drone.DroneBatteryLevelResponse;
 import com.musalasoft.dronesapi.model.payload.drone.DroneDto;
 import com.musalasoft.dronesapi.model.payload.drone.LoadDroneRequest;
 import com.musalasoft.dronesapi.model.payload.drone.RegisterDroneRequest;
 import com.musalasoft.dronesapi.model.payload.base.BaseResponse;
 import com.musalasoft.dronesapi.model.payload.medication.FetchLoadedMedicationsResponse;
+import com.musalasoft.dronesapi.model.payload.medication.MedicationDto;
+import com.musalasoft.dronesapi.model.payload.pagination.PagedResponse;
 import com.musalasoft.dronesapi.model.repository.DroneRepository;
 import com.musalasoft.dronesapi.model.repository.MediaRepository;
 import com.musalasoft.dronesapi.model.repository.MedicationRepository;
-import com.musalasoft.dronesapi.rest.service.BatteryLevelAuditService;
+import com.musalasoft.dronesapi.rest.service.DroneBatteryLevelAuditService;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -27,12 +30,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
 import static org.junit.jupiter.api.Assertions.*;
@@ -48,10 +53,10 @@ class DroneServiceImplTest {
     private MediaRepository mediaRepository;
 
     @Mock
-    private BatteryLevelAuditService batteryLevelAuditService;
+    private MedicationRepository medicationRepository;
 
     @Mock
-    private MedicationRepository medicationRepository;
+    private DroneBatteryLevelAuditService droneBatteryLevelAuditService;
 
     private static Validator validator;
 
@@ -377,6 +382,18 @@ class DroneServiceImplTest {
     }
 
     @Test
+    void shouldTestLoadDroneFailsForDroneNotFoundThrowsException() {
+        LoadDroneRequest request = LoadDroneRequest.builder().droneSerialNumber("loremipsum")
+                .medicationCode("abc123").medicationName("strepsils").medicationWeight(500.0)
+                .medicationImageId(1L).build();
+        Long droneId = 1L;
+
+        when(droneRepository.existsBySerialNumberAndId(request.getDroneSerialNumber(), droneId)).thenReturn(false);
+
+        assertThrows(DroneNotFoundException.class, () -> droneService.loadDrone(droneId, request));
+    }
+
+    @Test
     void shouldTestGetLoadedMedicationsSuccessfulFetch() {
         Long droneId = 1L;
         Drone drone = new Drone();
@@ -403,6 +420,154 @@ class DroneServiceImplTest {
         Long droneId = 1L;
         when(droneRepository.findMedicationsByDroneId(droneId)).thenReturn(Optional.empty());
         assertThrows(DroneNotFoundException.class, () -> droneService.getLoadedMedication(droneId));
+    }
+
+    @Test
+    void shouldTestGetLoadedMedicationsShouldReturnValidResponse() {
+        Long droneId = 1L;
+        Drone mockDrone = createMockDrone();
+        when(droneRepository.findMedicationsByDroneId(droneId)).thenReturn(Optional.of(mockDrone));
+
+        for (Medication mockMedication : mockDrone.getMedications()) {
+            when(mockMedication.getId()).thenReturn(1L);
+            when(mockMedication.getWeight()).thenReturn(30.0);
+            when(mockMedication.getName()).thenReturn("Mock Medication");
+            when(mockMedication.getImageUrl()).thenReturn("mock-image-url");
+            when(mockMedication.getCode()).thenReturn("ABC123");
+        }
+
+        BaseResponse<?> result = droneService.getLoadedMedication(droneId);
+
+        assertNotNull(result);
+        assertEquals(Constants.ResponseStatusCode.SUCCESS, result.getResponseCode());
+        assertEquals("fetched medications records successfully for drone with id " + droneId, result.getResponseMessage());
+
+        FetchLoadedMedicationsResponse responseData = extractBaseResponseData(result, FetchLoadedMedicationsResponse.class);
+        assertNotNull(responseData);
+        assertEquals(mockDrone.getId(), responseData.getDroneId());
+        assertEquals(mockDrone.getSerialNumber(), responseData.getDroneSerialNumber());
+
+        assertEquals(mockDrone.getMedications().size(), responseData.getMedications().size());
+
+        Iterator<Medication> mockMedicationIterator = mockDrone.getMedications().iterator();
+        for (MedicationDto actualDto : responseData.getMedications()) {
+            assertTrue(mockMedicationIterator.hasNext());
+            Medication mockMedication = mockMedicationIterator.next();
+
+            assertEquals(mockMedication.getId(), actualDto.getId());
+            assertEquals(mockMedication.getWeight(), actualDto.getWeight());
+            assertEquals(mockMedication.getName(), actualDto.getName());
+            assertEquals(mockMedication.getImageUrl(), actualDto.getImage());
+            assertEquals(mockMedication.getCode(), actualDto.getCode());
+        }
+
+        verify(droneRepository, times(1)).findMedicationsByDroneId(droneId);
+        verifyNoMoreInteractions(droneRepository);
+    }
+
+    @Test
+    void getAvailableDronesForLoadingThrowsExceptionForDroneNotFound() {
+        int pageNumber = 0;
+        int pageSize = 10;
+        when(droneRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
+        assertThrows(DroneNotFoundException.class, () -> droneService.getAvailableDronesForLoading(pageNumber, pageSize));
+    }
+
+    @Test
+    void getAvailableDronesForLoadingShouldReturnValidResponse() {
+        int pageNumber = 0;
+        int pageSize = 10;
+
+        Drone mockDrone = createMockDrone();
+        Page<Drone> mockPage = new PageImpl<>(Collections.singletonList(mockDrone));
+
+        when(droneRepository.findAll(any(Pageable.class))).thenReturn(mockPage);
+
+        BaseResponse<?> result = droneService.getAvailableDronesForLoading(pageNumber, pageSize);
+
+        assertNotNull(result);
+        assertEquals(Constants.ResponseStatusCode.SUCCESS, result.getResponseCode());
+        assertEquals("fetched available drones successfully", result.getResponseMessage());
+
+        PagedResponse<?> responseData = extractBaseResponseData(result, PagedResponse.class);
+        assertNotNull(responseData);
+        assertEquals(1, responseData.getData().getContent().size());
+
+        DroneDto droneDto = (DroneDto) responseData.getData().getContent().get(0);
+        assertEquals(mockDrone.getId(), droneDto.getId());
+        assertEquals(mockDrone.getSerialNumber(), droneDto.getSerialNumber());
+        verify(droneRepository, times(1)).findAll(any(Pageable.class));
+        verifyNoMoreInteractions(droneRepository);
+    }
+
+    @Test
+    void shouldTestGetDroneBatteryLevelShouldReturnSuccessResponse() {
+        Long droneId = 1L;
+        Drone mockDrone = createMockDrone();
+        when(droneRepository.findById(droneId)).thenReturn(Optional.of(mockDrone));
+
+        // Act
+        BaseResponse<?> result = droneService.getDroneBatteryLevel(droneId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(Constants.ResponseStatusCode.SUCCESS, result.getResponseCode());
+        assertEquals(Constants.ResponseMessages.SUCCESS, result.getResponseMessage());
+
+        DroneBatteryLevelResponse responseData = extractBaseResponseData(result, DroneBatteryLevelResponse.class);
+        assertNotNull(responseData);
+        assertEquals(mockDrone.getSerialNumber(), responseData.getDroneSerialNumber());
+        assertEquals(mockDrone.getBatteryLevel(), responseData.getBatteryLevel());
+
+        verify(droneRepository, times(1)).findById(droneId);
+        verifyNoMoreInteractions(droneRepository);
+    }
+
+    @Test
+    void shouldTestGetDroneBatteryLevelShouldReturnFailedResponseWhenDroneNotFound() {
+        Long droneId = 1L;
+        when(droneRepository.findById(droneId)).thenReturn(Optional.empty());
+
+        BaseResponse<?> result = droneService.getDroneBatteryLevel(droneId);
+
+        assertNotNull(result);
+        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getResponseCode());
+        assertEquals("drone not found", result.getResponseMessage());
+
+        verify(droneRepository, times(1)).findById(droneId);
+        verifyNoMoreInteractions(droneRepository);
+    }
+
+    @Test
+    void shouldTestCheckDroneBatteryLevelsSchedulerShouldAuditBatteryLevelForAvailableDrones() {
+        List<Drone> mockDrones = Arrays.asList(createMockDrone(), createMockDrone());
+        when(droneRepository.findAll()).thenReturn(mockDrones);
+
+        droneService.checkDroneBatteryLevelsSchedule();
+
+        verify(droneBatteryLevelAuditService, times(mockDrones.size())).auditDroneBatteryLevel(anyLong(), anyDouble());
+        verify(droneRepository, times(1)).findAll();
+        verifyNoMoreInteractions(droneBatteryLevelAuditService, droneRepository);
+    }
+
+    @Test
+    void shouldTestCheckDroneBatteryLevelsSchedulerShouldLogInfoWhenNoAvailableDronesFound() {
+        when(droneRepository.findAll()).thenReturn(Collections.emptyList());
+        droneService.checkDroneBatteryLevelsSchedule();
+        verify(droneRepository, times(1)).findAll();
+        verifyNoMoreInteractions(droneBatteryLevelAuditService, droneRepository);
+    }
+
+    private Drone createMockDrone() {
+        Drone drone = new Drone();
+        drone.setId(1L);
+        drone.setModel(DroneModel.HEAVYWEIGHT);
+        drone.setBatteryLevel(100.0);
+        drone.setWeightLimit(800.0);
+        drone.setSerialNumber("lorem");
+        drone.setDroneState(DroneState.IDLE);
+        drone.setMedications(Set.of(Mockito.mock(Medication.class)));
+        return drone;
     }
 
     <T> T extractBaseResponseData(BaseResponse<?> response, Class<T> responseType) {
