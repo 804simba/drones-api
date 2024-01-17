@@ -11,17 +11,10 @@
 - [Usage](#usage)
     - [API Endpoints](#api-endpoints)
 - [Testing](#testing)
-- [Contributing](#contributing)
-- [License](#license)
 
 ## Introduction
 
-Briefly describe the purpose and functionality of the Drones API.
-
-## Requirements
-
-- Java 17
-- Docker
+The Drones API project establishes a robust and efficient RESTful web service for managing and administering drones within a delivery or transportation system. This API serves as a critical intermediary, enabling clients to interact with drones for various tasks without directly interfacing with the drones' hardware or communication protocols.
 
 ## Setup
 
